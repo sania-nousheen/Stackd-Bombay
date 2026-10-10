@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --brand-burgundy: #6C1929;
+    --brand-burgundy-deep: #4D0F1C;
+    --brand-burgundy-dark: #320711;
+    --brand-cream: #F5F0E5;
+    --brand-cream-light: #FAF7F0;
+    --brand-cream-muted: #E8DFCC;
+    --brand-chocolate: #17090C;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--brand-cream);
+    color: var(--brand-burgundy-dark);
+    overflow-x: hidden;
+  }
+}
+
+.font-script {
+  font-family: 'Alex Brush', 'Pinyon Script', cursive;
+}
+
+.font-sugar-cookie {
+  font-family: 'Patrick Hand', 'Mali', cursive, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.font-signature {
+  font-family: 'Pinyon Script', cursive;
+}
+
+.font-editorial {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-cormorant {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: normal;
+}
+
+.font-dm-sans {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.font-sans-clean {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F5F0E5;
+}
+::-webkit-scrollbar-thumb {
+  background: #6C1929;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4D0F1C;
+}
+
+/* Scrapbook tape & texture styling */
+.tape-top {
+  position: relative;
+}
+.tape-top::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 90px;
+  height: 24px;
+  background: rgba(245, 240, 229, 0.75);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  border-left: 2px dashed rgba(108, 25, 41, 0.2);
+  border-right: 2px dashed rgba(108, 25, 41, 0.2);
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
+.tape-corner {
+  position: relative;
+}
+.tape-corner::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 70px;
+  height: 22px;
+  transform: rotate(38deg);
+  background: rgba(245, 240, 229, 0.8);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+/* Paper grain overlay */
+.paper-grain {
+  background-image: radial-gradient(rgba(108, 25, 41, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
