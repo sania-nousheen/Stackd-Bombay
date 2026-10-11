@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { PRODUCTS, Product } from '../data/products';
 import { JOURNAL_POSTS, JournalPost } from '../data/journal';
+
+import holyTrinityImage from '../assets/images/cookie_holy_trinity_1791484027979.jpg';
+import nutellaTinImage from '../assets/images/cookie_nutella_tin_1791484044384.jpg';
+import heroCookieImage from '../assets/images/hero_cookie_macro_1791484018264.jpg';
+import ingredientsImage from '../assets/images/ingredients_couverture_butter_1791484056180.jpg';
+
 import {
   X,
   Save,
