@@ -128,11 +128,11 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
 
 const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
   try {
-      return localStorage.getItem('stackd_ingredients_photo') || '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg';
-    } catch {
-      return '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg';
-    }
-  });
+    return localStorage.getItem('stackd_ingredients_photo') || ingredientsImage;
+  } catch {
+    return ingredientsImage;
+  }
+});
 
   if (!isOpen) return null;
 
@@ -177,18 +177,18 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
   };
 
   const handleAddNewProduct = () => {
-    const newId = `cookie-${Date.now()}`;
-    const newProd: Product = {
-      id: newId,
-      name: 'New Custom Cookie',
-      tagline: 'Freshly Baked in Worli',
-      category: 'cookie',
-      availability: '24hr Pre-Order',
-      description: 'Loaded with premium Belgian chocolate and European French butter.',
-      founderNote: 'Tested and perfected in the South Bombay test kitchen.',
-      ingredientsHighlight: ['Belgian Couverture', 'French Butter'],
-      texture: 'Crisp perimeter with molten centre',
-      image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg'
+  const newId = `cookie-${Date.now()}`;
+  const newProd: Product = {
+    id: newId,
+    name: 'New Custom Cookie',
+    tagline: 'Freshly Baked in Worli',
+    category: 'cookie',
+    availability: '24hr Pre-Order',
+    description: 'Loaded with premium Belgian chocolate and European French butter.',
+    founderNote: 'Tested and perfected in the South Bombay test kitchen.',
+    ingredientsHighlight: ['Belgian Couverture', 'French Butter'],
+    texture: 'Crisp perimeter with molten centre',
+    image: heroCookieImage
     };
     setMenuItems((prev) => [newProd, ...prev]);
     setSelectedProductId(newId);
@@ -236,14 +236,14 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
   };
 
   const handleAddNewReel = () => {
-    const newId = `reel-${Date.now()}`;
-    const newReel: ReelItem = {
-      id: newId,
-      name: 'New Kitchen Moment',
-      instagramUrl: 'https://instagram.com/reel/C2g7Z-yP3Z0',
-      videoUrl: '/videos/cookie_pull.mp4',
-      poster: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg'
-    };
+  const newId = `reel-${Date.now()}`;
+  const newReel: ReelItem = {
+    id: newId,
+    name: 'New Kitchen Moment',
+    instagramUrl: 'https://instagram.com/reel/C2g7Z-yP3Z0',
+    videoUrl: '/videos/cookie_pull.mp4',
+    poster: holyTrinityImage
+  };
     setReels((prev) => [...prev, newReel]);
     setSelectedReelId(newId);
   };
@@ -302,7 +302,7 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
       title: 'New Story from the Worli Kitchen',
       category: 'recipes',
       excerpt: 'Notes on new recipe trials, flour hydrations, and baking science from Bhavya.',
-      image: '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg',
+      image: ingredientsImage,
       readTime: '3 min read',
       content: [
         'Every day in the kitchen is an opportunity to obsess over details.',
@@ -354,15 +354,17 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
   };
 
   const handleResetPhotos = () => {
-    if (window.confirm('Reset all website photos back to original defaults?')) {
-      localStorage.removeItem('stackd_founder_photo');
-      localStorage.removeItem('stackd_bhavya_photo');
-      localStorage.removeItem('stackd_tin_photo');
-      localStorage.removeItem('stackd_ingredients_photo');
-      setFounderPhoto('');
-      setTinPhoto('/src/assets/images/cookie_nutella_tin_1791484044384.jpg');
-      setIngredientsPhoto('/src/assets/images/ingredients_couverture_butter_1791484056180.jpg');
-      showNotification('Photos reset to brand defaults!');
+  if (window.confirm('Reset all website photos back to original defaults?')) {
+    localStorage.removeItem('stackd_founder_photo');
+    localStorage.removeItem('stackd_bhavya_photo');
+    localStorage.removeItem('stackd_tin_photo');
+    localStorage.removeItem('stackd_ingredients_photo');
+
+    setFounderPhoto('');
+    setTinPhoto(nutellaTinImage);
+    setIngredientsPhoto(ingredientsImage);
+
+    showNotification('Photos reset to brand defaults!');
     }
   };
 
@@ -1489,8 +1491,8 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
                           </label>
                           <button
                             type="button"
-                            onClick={() => setTinPhoto('/src/assets/images/cookie_nutella_tin_1791484044384.jpg')}
-                            className="px-3 py-2 border border-[#6C1929]/20 hover:bg-[#6C1929]/5 text-[#6C1929] rounded-lg text-xs font-semibold cursor-pointer"
+onClick={() => setTinPhoto(nutellaTinImage)}
+className="px-3 py-2 border border-[#6C1929]/20 hover:bg-[#6C1929]/5 text-[#6C1929] rounded-lg text-xs font-semibold cursor-pointer"
                           >
                             Default
                           </button>
@@ -1560,15 +1562,15 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
                           </label>
                           <button
                             type="button"
-                            onClick={() => setIngredientsPhoto('/src/assets/images/ingredients_couverture_butter_1791484056180.jpg')}
-                            className="px-3 py-2 border border-[#6C1929]/20 hover:bg-[#6C1929]/5 text-[#6C1929] rounded-lg text-xs font-semibold cursor-pointer"
-                          >
-                            Default
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+onClick={() => setIngredientsPhoto(ingredientsImage)}
+className="px-3 py-2 border border-[#6C1929]/20 hover:bg-[#6C1929]/5 text-[#6C1929] rounded-lg text-xs font-semibold cursor-pointer"
+>
+  Default
+</button>
+</div>
+</div>
+</div>
+</div>
                   <p className="text-[11px] text-[#6C1929]/70 pt-2 border-t border-[#6C1929]/10">
                     Displayed in the Philosophy of Flavour section showing butter and couverture chocolate.
                   </p>
