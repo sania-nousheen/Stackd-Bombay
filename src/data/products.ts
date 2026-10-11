@@ -1,3 +1,8 @@
+import holyTrinityImage from '../assets/images/cookie_holy_trinity_1791484027979.jpg';
+import nutellaTinImage from '../assets/images/cookie_nutella_tin_1791484044384.jpg';
+import heroCookieImage from '../assets/images/hero_cookie_macro_1791484018264.jpg';
+import ingredientsImage from '../assets/images/ingredients_couverture_butter_1791484056180.jpg';
+
 export interface Product {
   id: string;
   name: string;
@@ -30,7 +35,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['3 Types of Belgian Couverture', 'French Président Butter', 'Flaky Sea Salt'],
     ingredients: ['Belgian Dark Couverture (Callebaut)', 'Belgian Milk Couverture', 'Belgian White Couverture', 'French Président Butter', 'Unrefined Brown Sugar', 'Organic Flour', 'Flaky Sea Salt'],
     texture: 'Crispy edges · Soft centre · Melted chocolate pools',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     badge: 'Signature Obsession'
   },
   {
@@ -45,7 +50,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Belgian Dark Couverture', 'French Président Butter', 'Madagascar Vanilla'],
     ingredients: ['Dark Couverture Chocolate', 'French Butter', 'Brown Sugar', 'Pure Vanilla'],
     texture: 'Deep cocoa crumb · Gooey centre · Golden ring',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     badge: 'NYC Style'
   },
   {
@@ -60,7 +65,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Pure Nutella Core', 'Dutch Cocoa Dough', 'French Butter Crumb'],
     ingredients: ['Pure Nutella', 'Dutch Process Cocoa', 'Belgian Chocolate', 'French Butter'],
     texture: 'Crisp cocoa exterior · Warm molten core',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     badge: 'Molten Core'
   },
   {
@@ -75,7 +80,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Freshly Baked Nutella Cookies', 'Airtight Keepsake Tin', 'Bespoke Wax Paper Wrap'],
     ingredients: ['Loaded Nutella Stuffed Cookies', 'French Butter Dough', 'Airtight Keepsake Tin'],
     texture: 'Layers of warm, loaded cookies in an airtight tin',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     badge: 'Bestselling Tin'
   },
   {
@@ -90,7 +95,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Kinder Bueno Cream', 'Crisp Wafer Inclusions', 'White Belgian Couverture'],
     ingredients: ['Roasted Hazelnut Cream', 'Crushed Crispy Wafers', 'White Belgian Couverture', 'French Butter'],
     texture: 'Crispy wafer contrast · Silky hazelnut cream',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     badge: 'Collector Tin'
   },
   {
@@ -105,7 +110,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Italian Hazelnut Cream', 'Crushed Wafer', 'French Butter'],
     ingredients: ['Italian Hazelnut Spread', 'Milk & White Couverture', 'French Butter'],
     texture: 'Chewy cookie dough · Wafer crunch · Cream centre',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     badge: 'Fan Favourite'
   },
   {
@@ -121,7 +126,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Gooey White Couverture Core', 'Hand-crushed Oreo Chunks', 'Dutch Cocoa'],
     ingredients: ['Dutch Cocoa Red Velvet Crumb', 'White Chocolate Core', 'Oreo Biscuit Chunks', 'French Butter'],
     texture: 'Velvety red crumb · Molten white chocolate · Oreo crunch',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     badge: '10+ Recipe Trials'
   },
   {
@@ -136,7 +141,7 @@ export const PRODUCTS: Product[] = [
     ingredientsHighlight: ['Nutella Molten Cookies', 'Kinder Bueno Cookies', 'Premium Stackd Tin'],
     ingredients: ['Nutella Molten Cookies', 'Kinder Bueno Hazelnut Cookies', 'Keepsake Metal Tin'],
     texture: 'The complete dual-flavour loaded experience',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     badge: 'Signature Dual Tin'
   }
 ];
