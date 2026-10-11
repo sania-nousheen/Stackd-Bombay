@@ -299,4 +299,10 @@ export const JOURNAL_POSTS: JournalPost[] = [
     readTime: '3 min read',
     keyHighlight: 'Retiring the 250g tin and upgrading to our signature keepsake tin.',
     content: [
-      'We officially re
+      
+      'We officially retired our smaller 250g tins after they became increasingly difficult to source consistently. Instead of compromising on packaging, we decided to move towards a larger keepsake tin.',
+      'It was a risky decision. The new tin cost more, and I worried that customers might not want to pay for the upgrade. But we believed that the packaging should reflect the care that goes into every batch of cookies.',
+      'The response from Mumbai encouraged us to keep going. This change marked a new chapter for Stackd: better packaging, the same commitment to quality, and cookies made with the same attention to detail.'
+    ]
+  }
+];
