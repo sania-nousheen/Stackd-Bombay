@@ -1,7 +1,12 @@
+import holyTrinityImage from '../assets/images/cookie_holy_trinity_1791484027979.jpg';
+import nutellaTinImage from '../assets/images/cookie_nutella_tin_1791484044384.jpg';
+import heroCookieImage from '../assets/images/hero_cookie_macro_1791484018264.jpg';
+import ingredientsImage from '../assets/images/ingredients_couverture_butter_1791484056180.jpg';
+
 export interface JournalPost {
   id: string;
   date: string;
-  rawDate: string; // for sorting
+  rawDate: string;
   title: string;
   category: 'origins' | 'recipes' | 'ingredients' | 'milestones' | 'economics';
   excerpt: string;
@@ -19,7 +24,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'I Spent ₹9,000 Testing Cookies Before Launching Stackd',
     category: 'origins',
     excerpt: 'As a first-year student, my life revolved around testing recipes and starting over. After months of failed batches, I finally made a cookie worth obsessing over.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     readTime: '3 min read',
     keyHighlight: '₹9,000+ invested solely in recipe trials before launch.',
     content: [
@@ -36,7 +41,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'The Holy Trinity: 100+ Cookies Later',
     category: 'recipes',
     excerpt: 'Everyone claims their chocolate chip cookie is the best. I wanted Stackd’s version to be unmistakable. It took over 100 test bakes to arrive at three distinct couvertures.',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     readTime: '4 min read',
     keyHighlight: 'Tested over 100 cookies to create our signature chocolate chip.',
     content: [
@@ -52,7 +57,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: "Why Our Cookie Doesn't Cost ₹50",
     category: 'ingredients',
     excerpt: 'We deliberately choose imported French Président butter and Belgian couverture chocolate over palm-oil compound fats. Here is what quality actually costs.',
-    image: '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg',
+    image: ingredientsImage,
     readTime: '3 min read',
     keyHighlight: 'Pure cocoa butter vs vegetable fat systems.',
     content: [
@@ -68,7 +73,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: '92 Followers, One Very Big Dream',
     category: 'origins',
     excerpt: 'I had 92 followers on Instagram and a goal of building India’s next beloved cookie brand at 19. It sounded crazy until the first repeat orders arrived.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     readTime: '3 min read',
     keyHighlight: 'From 92 followers in Worli to returning customers.',
     content: [
@@ -84,7 +89,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'The First Order',
     category: 'milestones',
     excerpt: 'I checked the payment notification three times because I couldn’t believe it. For months my biggest fear was that nobody would order.',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     readTime: '3 min read',
     keyHighlight: 'The moment a complete stranger trusted a 19-year-old’s bake.',
     content: [
@@ -100,7 +105,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'The Customer Who Was Willing to Wait',
     category: 'milestones',
     excerpt: 'A customer needed a Nutella tin within 30 minutes. We couldn’t rush the bake. Instead of cancelling, he chose to wait an hour for a fresh batch.',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     readTime: '3 min read',
     keyHighlight: 'Patience over instant convenience for fresh baking.',
     content: [
@@ -116,7 +121,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: '30 Cookies In — And People Were Coming Back',
     category: 'milestones',
     excerpt: 'Stackd crossed 30 cookies sold since launch. But the real validation wasn’t the number; it was seeing the same names pop up in my DMs.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     readTime: '2 min read',
     keyHighlight: 'The shift from novelty purchases to repeat lovers.',
     content: [
@@ -131,7 +136,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: '10+ Versions Later: The Red Velvet Oreo Cookie',
     category: 'recipes',
     excerpt: 'Some spread too much, some were cloyingly sweet, some didn’t taste like red velvet. I almost gave up on this recipe before hitting perfection.',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     readTime: '3 min read',
     keyHighlight: 'Rejected over 10 test versions of Red Velvet Oreo.',
     content: [
@@ -147,7 +152,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'The Dream Started Two Years Ago',
     category: 'origins',
     excerpt: 'Stackd did not happen overnight. My family and I had been testing concepts and recipes for two years before finding the courage to launch.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     readTime: '3 min read',
     keyHighlight: 'Two years of family experimentation before launch.',
     content: [
@@ -163,7 +168,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'Why One Stackd Cookie Costs ₹250',
     category: 'economics',
     excerpt: 'Callebaut couverture chocolate is expensive. French butter is expensive. We don’t use premixes or cheap compound slabs. Here is the honest math.',
-    image: '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg',
+    image: ingredientsImage,
     readTime: '4 min read',
     keyHighlight: 'No premixes, no shortcuts, pure Callebaut & French butter.',
     content: [
@@ -179,7 +184,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'Why Your Cookie Order Starts 24 Hours Before You Eat It',
     category: 'recipes',
     excerpt: 'Our dough rests overnight in refrigeration to allow starches to hydrate and caramelized flavours to develop. Fresh baking can’t be rushed.',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     readTime: '3 min read',
     keyHighlight: '24-hour dough maturation for complex flavor and texture.',
     content: [
@@ -195,7 +200,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: "You Don't Need Eggs to Make a Dessert That Slaps",
     category: 'recipes',
     excerpt: 'I never wanted "eggless" to be an excuse for a dry or flat cookie. I wanted customers to fall in love with the taste first, then realise it was egg-free.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     readTime: '3 min read',
     keyHighlight: 'Eggless as a standard of decadence, not a compromise.',
     content: [
@@ -211,7 +216,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'Building Stackd Between Classes',
     category: 'origins',
     excerpt: 'Assignments due at midnight, accounting lectures at 8 AM, and dough testing in between. A look into what being a 19-year-old student founder actually looks like.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
+    image: heroCookieImage,
     readTime: '4 min read',
     keyHighlight: 'Juggling college assignments, exams, and 4 AM bakes.',
     content: [
@@ -227,7 +232,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'The Birthday Gift That Made Me Stop Overthinking',
     category: 'milestones',
     excerpt: 'A customer ordered a cookie tin as a surprise birthday gift for her brother. I was terrified of letting them down. Her message changed my confidence forever.',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     readTime: '3 min read',
     keyHighlight: 'When a customer called our tin "even better than the photos".',
     content: [
@@ -243,7 +248,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: 'One Customer Ordered 8 Times',
     category: 'milestones',
     excerpt: 'A single Mumbai cookie lover placed 8 distinct orders in just 60 days. If someone trusts you 8 times, the 9th batch needs to be flawless.',
-    image: '/src/assets/images/cookie_holy_trinity_1791484027979.jpg',
+    image: holyTrinityImage,
     readTime: '3 min read',
     keyHighlight: '8 repeat orders from one customer in two months.',
     content: [
@@ -259,7 +264,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: "I Could Make Them Cheaper. I Don't Want To.",
     category: 'ingredients',
     excerpt: 'I could switch to margarine and compound chocolate to triple our margins. But selling an average cookie is not why I started Stackd.',
-    image: '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg',
+    image: ingredientsImage,
     readTime: '3 min read',
     keyHighlight: 'Refusing to compromise for higher margins.',
     content: [
@@ -275,7 +280,7 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: '25+ Cookie Tins',
     category: 'milestones',
     excerpt: 'Over 25 keepsake tins sold across Mumbai. In a city with thousands of dessert options, people chose a brand built by a 19-year-old student.',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     readTime: '2 min read',
     keyHighlight: '25+ loaded keepsake tins delivered to Mumbai doorsteps.',
     content: [
@@ -290,47 +295,8 @@ export const JOURNAL_POSTS: JournalPost[] = [
     title: "We're Quitting Our 250g Tins",
     category: 'milestones',
     excerpt: 'When our smaller tins became difficult to source, I took a scary gamble on a larger, more expensive tin. Mumbai responded with love.',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
+    image: nutellaTinImage,
     readTime: '3 min read',
     keyHighlight: 'Retiring the 250g tin and upgrading to our signature keepsake tin.',
     content: [
-      'We officially retired our original 250g cookie tins. Sourcing them consistently in India without compromising the airtight freshness seal became nearly impossible.',
-      'I decided to make the switch to the large, deep-drawn keepsake tin I had always wanted. I was genuinely anxious—would customers balk at the higher price point of a bigger tin?',
-      'The response took my breath away. Customers loved having a full, generous tin of cookies that kept its crunch for days. Sometimes bigger just makes more sense.'
-    ]
-  },
-  {
-    id: 'post-19',
-    date: '31 AUGUST 2026',
-    rawDate: '2026-08-31',
-    title: '90+ Orders In Three Months',
-    category: 'milestones',
-    excerpt: 'Over 90 orders fulfilled while studying full-time. Chunky, eggless, New York-style cookies baked fresh in Worli, Mumbai.',
-    image: '/src/assets/images/hero_cookie_macro_1791484018264.jpg',
-    readTime: '3 min read',
-    keyHighlight: '90+ orders in 90 days alongside college.',
-    content: [
-      'Three months in, Stackd has fulfilled more than 90 orders across Mumbai. Every single batch was hand-measured, chilled for 24 hours, baked fresh, and packed in Worli.',
-      'We set out to create Mumbai’s most loaded eggless cookie tin and chunky NYC-style cookies. 90 orders later, the community growing around Stackd has proven that people value true ingredient integrity. If you haven’t tried a fresh warm bake yet, pre-orders are open.'
-    ]
-  },
-  {
-    id: 'post-20',
-    date: '25 SEPTEMBER 2026',
-    rawDate: '2026-09-25',
-    title: '₹1,200 For A Cookie Tin. Crazy Right?',
-    category: 'economics',
-    excerpt: '₹2,000/kg for Callebaut couverture, ₹650/kg for French butter, packaging and Mumbai kitchen costs. Here is the honest economic breakdown.',
-    image: '/src/assets/images/cookie_nutella_tin_1791484044384.jpg',
-    readTime: '4 min read',
-    keyHighlight: 'Full transparent breakdown of premium bakery economics.',
-    content: [
-      'Let’s talk about the price of a loaded cookie tin openly. Why does a Stackd tin cost ₹1,200? Is that crazy for cookies?',
-      'Let’s break down the math:',
-      '• Pure Callebaut Belgian couverture chocolate costs approximately ₹2,000 per kilogram.',
-      '• Imported French Président butter costs approximately ₹650 per kilogram.',
-      '• On top of that: premium flour, unrefined sugars, airtight metal tins, bespoke wax wraps, electricity, South Mumbai kitchen running costs, and delivery handling.',
-      'Customers have endless cheap dessert alternatives in Mumbai, and that is completely fine. Stackd is built specifically for people who care about what goes into their food, who appreciate uncompromised ingredients, and who value cookies baked with heart.'
-    ]
-  }
-];
+      'We officially re
