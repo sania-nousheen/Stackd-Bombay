@@ -119,15 +119,15 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
   });
 
   const [tinPhoto, setTinPhoto] = useState<string>(() => {
-    try {
-      return localStorage.getItem('stackd_tin_photo') || '/src/assets/images/cookie_nutella_tin_1791484044384.jpg';
-    } catch {
-      return '/src/assets/images/cookie_nutella_tin_1791484044384.jpg';
-    }
-  });
+  try {
+    return localStorage.getItem('stackd_tin_photo') || nutellaTinImage;
+  } catch {
+    return nutellaTinImage;
+  }
+});
 
-  const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
-    try {
+const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
+  try {
       return localStorage.getItem('stackd_ingredients_photo') || '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg';
     } catch {
       return '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg';
