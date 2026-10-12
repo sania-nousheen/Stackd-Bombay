@@ -156,6 +156,12 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const fallback = getAssetUrl('/images/hero_cookie_macro.jpg');
+                      if (e.currentTarget.src !== fallback && e.currentTarget.src !== window.location.origin + fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
                   />
                   
                   {/* Subtle Gradient Scrim */}

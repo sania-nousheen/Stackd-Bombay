@@ -121,6 +121,12 @@ export const FounderJournal: React.FC<FounderJournalProps> = ({
                     alt={post.title}
                     className="w-full h-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const fallback = getAssetUrl('/images/hero_cookie_macro.jpg');
+                      if (e.currentTarget.src !== fallback && e.currentTarget.src !== window.location.origin + fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 </div>
@@ -215,6 +221,12 @@ export const FounderJournal: React.FC<FounderJournalProps> = ({
                   src={getAssetUrl(selectedPost.image)}
                   alt={selectedPost.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const fallback = getAssetUrl('/images/hero_cookie_macro.jpg');
+                    if (e.currentTarget.src !== fallback && e.currentTarget.src !== window.location.origin + fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
                 />
               </div>
 

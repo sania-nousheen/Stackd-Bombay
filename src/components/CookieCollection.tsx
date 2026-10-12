@@ -80,6 +80,12 @@ export const CookieCollection: React.FC<CookieCollectionProps> = ({
                   alt={product.name}
                   className="relative w-full h-full object-cover rounded-full shadow-2xl transition-transform duration-500 group-hover:rotate-3"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const fallback = getAssetUrl('/images/hero_cookie_macro.jpg');
+                    if (e.currentTarget.src !== fallback && e.currentTarget.src !== window.location.origin + fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
                 />
               </div>
 
