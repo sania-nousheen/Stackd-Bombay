@@ -1,6 +1,8 @@
+import { getAssetUrl } from "../utils/assets";
 import React, { useState, useEffect, useRef } from "react";
-import { Link2, Volume2, VolumeX, Sparkles, Upload } from "lucide-react";
+import { Link2, Volume2, VolumeX, Sparkles, Upload, Loader2 } from "lucide-react";
 import { idbGet, idbSet, safeLocalStorageSet } from "../utils/mediaStorage";
+import { subscribeReels, saveReel, uploadMediaFile, ReelRecord } from "../services/firebase";
 
 export interface ReelItem {
   id: string;
@@ -10,6 +12,7 @@ export interface ReelItem {
   instagramUrl: string;
   videoUrl: string;
   poster?: string;
+  order?: number;
 }
 
 export const extractInstagramShortcode = (url?: string): string | null => {
@@ -37,7 +40,7 @@ export const DEFAULT_REELS: ReelItem[] = [
     quote: "“The molten Belgian chocolate core is completely insane. 10/10 gooeyness.”",
     instagramUrl: "https://instagram.com/reel/C2g7Z-yP3Z0",
     videoUrl: "/videos/cookie_pull.mp4",
-    poster: "/src/assets/images/cookie_holy_trinity_1791484027979.jpg"
+    poster: "/images/cookie_holy_trinity_1791484027979.jpg"
   },
   {
     id: "reel-2",
@@ -46,7 +49,7 @@ export const DEFAULT_REELS: ReelItem[] = [
     quote: "“Heaviest cookie tin in town. Warm it up for 20 seconds and thank me later.”",
     instagramUrl: "https://instagram.com/reel/C4h9xL1P0aB",
     videoUrl: "/videos/cookie_unboxing.mp4",
-    poster: "/src/assets/images/cookie_nutella_tin_1791484044384.jpg"
+    poster: "/images/cookie_nutella_tin_1791484044384.jpg"
   },
   {
     id: "reel-3",
@@ -55,7 +58,7 @@ export const DEFAULT_REELS: ReelItem[] = [
     quote: "“Pure French butter aroma. Crisp outer edge with that deep chewy centre.”",
     instagramUrl: "https://instagram.com/reel/C1m9kLkP4qR",
     videoUrl: "/videos/cookie_crumb.mp4",
-    poster: "/src/assets/images/hero_cookie_macro_1791484018264.jpg"
+    poster: "/images/hero_cookie_macro_1791484018264.jpg"
   }
 ];
 
@@ -70,7 +73,8 @@ export const isDirectPlayableVideo = (url?: string): boolean => {
     clean.includes(".webm?") ||
     clean.includes("/videos/") ||
     clean.startsWith("blob:") ||
-    clean.startsWith("data:video/")
+    clean.startsWith("data:video/") ||
+    clean.includes("firebasestorage.googleapis.com")
   );
 };
 
@@ -78,13 +82,9 @@ export const resolvePlayableVideo = (url?: string, index: number = 0): string =>
   if (url && isDirectPlayableVideo(url)) {
     return url;
   }
-  return DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length];
+  return getAssetUrl(DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length]);
 };
 
-/**
- * Strips huge base64/data URLs before saving to localStorage so it never exceeds quota.
- * Full data is safely persisted in IndexedDB.
- */
 export function sanitizeReelsForLocalStorage(reels: ReelItem[]): ReelItem[] {
   return reels.map((r) => ({
     ...r,
@@ -120,10 +120,29 @@ export const ReelWallSection: React.FC = () => {
   const [isMuted, setIsMuted] = useState(true);
   const [editingReelId, setEditingReelId] = useState<string | null>(null);
   const [inputUrl, setInputUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Hydrate high-res videos/photos from IndexedDB if saved
+  // Subscribe to real-time shared Firestore reels
   useEffect(() => {
     let isMounted = true;
+
+    const unsubscribe = subscribeReels((remoteReels) => {
+      if (remoteReels && remoteReels.length > 0 && isMounted) {
+        const merged = remoteReels.map((item, idx) => {
+          const defaultItem = DEFAULT_REELS[idx % DEFAULT_REELS.length];
+          return {
+            ...defaultItem,
+            ...item,
+            instagramUrl: item.instagramUrl || defaultItem.instagramUrl
+          };
+        });
+        setReels(merged);
+        const sanitized = sanitizeReelsForLocalStorage(merged);
+        safeLocalStorageSet("stackd_reels_data", JSON.stringify(sanitized));
+      }
+    });
+
+    // Also hydrate from IndexedDB for local offline support
     const hydrateFromIdb = async () => {
       const stored = await idbGet<ReelItem[]>("stackd_reels_full");
       if (stored && Array.isArray(stored) && isMounted) {
@@ -133,7 +152,6 @@ export const ReelWallSection: React.FC = () => {
     hydrateFromIdb();
 
     const handleDataUpdate = async () => {
-      // First check IndexedDB for heavy media
       const stored = await idbGet<ReelItem[]>("stackd_reels_full");
       if (stored && Array.isArray(stored) && isMounted) {
         setReels(stored);
@@ -161,6 +179,7 @@ export const ReelWallSection: React.FC = () => {
     window.addEventListener("stackd_data_updated", handleDataUpdate);
     return () => {
       isMounted = false;
+      unsubscribe();
       window.removeEventListener("stackd_data_updated", handleDataUpdate);
     };
   }, []);
@@ -213,16 +232,30 @@ export const ReelWallSection: React.FC = () => {
     // 2. Save metadata & lightweight URLs to localStorage safely
     const sanitized = sanitizeReelsForLocalStorage(updated);
     safeLocalStorageSet("stackd_reels_data", JSON.stringify(sanitized));
+
+    // 3. Persist to shared Firestore so all devices see the changes
+    for (let i = 0; i < updated.length; i++) {
+      const r = updated[i];
+      try {
+        await saveReel({
+          ...r,
+          order: i
+        });
+      } catch (err) {
+        console.warn(`Failed to sync reel ${r.id} to Firestore:`, err);
+      }
+    }
+
     window.dispatchEvent(new Event("stackd_data_updated"));
   };
 
-  const handleSaveUrl = async (id: string, index: number) => {
+  const handleSaveUrl = async (id: string) => {
     if (!inputUrl.trim()) {
       setEditingReelId(null);
       return;
     }
     const trimmed = inputUrl.trim();
-    const updated = reels.map((r, idx) => {
+    const updated = reels.map((r) => {
       if (r.id === id) {
         const isInsta = isInstagramUrl(trimmed);
         return {
@@ -254,25 +287,27 @@ export const ReelWallSection: React.FC = () => {
     setEditingReelId(null);
   };
 
-  const handleFileUpload = (id: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        const updated = reels.map((r) => {
-          if (r.id === id) {
-            return {
-              ...r,
-              videoUrl: dataUrl
-            };
-          }
-          return r;
-        });
-        await saveReelsState(updated);
-        setEditingReelId(null);
-      }
-    };
-    reader.readAsDataURL(file);
+  const handleFileUpload = async (id: string, file: File) => {
+    setIsUploading(true);
+    try {
+      // Upload to shared cloud storage
+      const uploadedUrl = await uploadMediaFile(file, 'videos');
+      const updated = reels.map((r) => {
+        if (r.id === id) {
+          return {
+            ...r,
+            videoUrl: uploadedUrl
+          };
+        }
+        return r;
+      });
+      await saveReelsState(updated);
+      setEditingReelId(null);
+    } catch (err) {
+      console.warn("Video upload error:", err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -310,7 +345,7 @@ export const ReelWallSection: React.FC = () => {
                 key={reel.id}
                 className="flex flex-col items-center group w-full"
               >
-                {/* Vertical Reel Video Container (Edge-to-edge pure video, no text top/bottom, no buttons) */}
+                {/* Vertical Reel Video Container */}
                 <div className="relative aspect-[9/16] w-full rounded-2xl overflow-hidden bg-black shadow-xl border border-[#6C1929]/20 transition-all duration-300 group-hover:scale-[1.015] group-hover:shadow-2xl flex items-center justify-center">
                   
                   {/* HTML5 Native High-Definition Video - Guaranteed Autoplay Loop */}
@@ -318,7 +353,7 @@ export const ReelWallSection: React.FC = () => {
                     ref={(el) => {
                       videoRefs.current[index] = el;
                     }}
-                    src={playableUrl}
+                    src={getAssetUrl(playableUrl)}
                     poster={reel.poster}
                     autoPlay
                     loop
@@ -327,129 +362,98 @@ export const ReelWallSection: React.FC = () => {
                     preload="auto"
                     className="w-full h-full object-cover object-center"
                     onError={(e) => {
-                      const fallback = DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length];
+                      const fallback = getAssetUrl(DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length]);
                       if (e.currentTarget.src !== window.location.origin + fallback) {
                         e.currentTarget.src = fallback;
                       }
                     }}
                   />
 
-                  {/* Audio Toggle Button - Subtle minimal top-right control */}
+                  {/* Audio Toggle Button */}
                   <div className="absolute top-3.5 right-3.5 flex items-center gap-2 z-20">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMuted(!isMuted);
-                      }}
-                      className="p-2 rounded-full bg-black/60 hover:bg-black/85 text-white/95 transition-all backdrop-blur-md cursor-pointer shadow-md border border-white/15 active:scale-95"
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="p-2.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-[#F5F0E5] transition-all hover:scale-110 active:scale-95 shadow-md cursor-pointer"
                       title={isMuted ? "Unmute audio" : "Mute audio"}
                       aria-label={isMuted ? "Unmute audio" : "Mute audio"}
                     >
                       {isMuted ? (
-                        <VolumeX className="w-3.5 h-3.5" />
+                        <VolumeX className="w-4 h-4 text-[#F5F0E5]" />
                       ) : (
-                        <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <Volume2 className="w-4 h-4 text-[#F5F0E5]" />
                       )}
                     </button>
-
-                    {/* Quick edit button on hover */}
-                    <button
-                      onClick={() => {
-                        setEditingReelId(reel.id);
-                        setInputUrl(reel.videoUrl || reel.instagramUrl || "");
-                      }}
-                      className="p-2 rounded-full bg-black/60 hover:bg-black/85 text-white/90 hover:text-white transition-opacity backdrop-blur-md opacity-0 group-hover:opacity-100 cursor-pointer shadow-md border border-white/15"
-                      title="Change video or upload video"
-                      aria-label="Change video or upload video"
-                    >
-                      <Link2 className="w-3.5 h-3.5" />
-                    </button>
                   </div>
-                </div>
 
-                {/* In-Card Quick URL / Upload Editor (when editing) */}
-                {editingReelId === reel.id && (
-                  <div className="w-full mt-3 p-3.5 bg-white rounded-xl border border-[#6C1929]/20 shadow-xl text-xs z-30 space-y-2.5 animate-in fade-in duration-150">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-[#6C1929]">
-                        Change Video For This Card:
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setEditingReelId(null)}
-                        className="text-[10px] text-[#6C1929]/60 hover:text-[#6C1929] cursor-pointer"
-                      >
-                        ✕ Close
-                      </button>
+                  {/* Loading Overlay when uploading */}
+                  {isUploading && editingReelId === reel.id && (
+                    <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white gap-2 z-30">
+                      <Loader2 className="w-7 h-7 animate-spin text-[#F5F0E5]" />
+                      <span className="text-xs uppercase font-mono tracking-wider">Syncing video...</span>
                     </div>
+                  )}
 
-                    <div className="flex gap-2">
+                  {/* Inline URL/Upload Edit Overlay (Admin only triggerable) */}
+                  {editingReelId === reel.id && !isUploading && (
+                    <div className="absolute inset-0 bg-black/85 backdrop-blur-sm z-30 p-4 flex flex-col justify-center gap-3 text-[#F5F0E5]">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#F5F0E5]/90">
+                        Update Review Video
+                      </span>
                       <input
                         type="text"
+                        placeholder="Paste MP4 link or Instagram URL"
                         value={inputUrl}
                         onChange={(e) => setInputUrl(e.target.value)}
-                        placeholder="Paste direct .mp4 video URL..."
-                        className="flex-1 px-3 py-1.5 border border-[#6C1929]/30 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#6C1929]"
+                        className="w-full px-3 py-2 bg-white/10 rounded-lg text-xs text-[#F5F0E5] border border-white/20 focus:outline-hidden focus:border-white/50"
                       />
-                      <button
-                        onClick={() => handleSaveUrl(reel.id, index)}
-                        className="px-3.5 py-1.5 bg-[#6C1929] hover:bg-[#52111E] text-[#F5F0E5] font-bold rounded-lg text-xs cursor-pointer shadow-sm"
-                      >
-                        Save
-                      </button>
-                    </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveUrl(reel.id)}
+                          className="flex-1 py-1.5 bg-[#6C1929] hover:bg-[#852134] rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Save Link
+                        </button>
+                        <button
+                          onClick={() => setEditingReelId(null)}
+                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
 
-                    {/* Direct Upload button */}
-                    <div className="pt-1 flex items-center justify-between border-t border-[#6C1929]/10">
-                      <span className="text-[10px] text-[#6C1929]/70 font-medium">Or upload your video:</span>
-                      <label className="px-2.5 py-1 bg-[#6C1929]/10 hover:bg-[#6C1929]/20 text-[#6C1929] rounded-md text-[10px] font-bold cursor-pointer inline-flex items-center gap-1">
-                        <Upload className="w-3 h-3" />
-                        <span>Upload .mp4</span>
-                        <input
-                          type="file"
-                          accept="video/mp4,video/webm,video/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload(reel.id, file);
-                          }}
-                        />
-                      </label>
+                      <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
+                        <label className="w-full py-1.5 px-2 bg-white/10 hover:bg-white/15 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1.5 cursor-pointer">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload MP4 from Device</span>
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handleFileUpload(reel.id, f);
+                            }}
+                          />
+                        </label>
+                        <div className="flex gap-1 justify-center">
+                          {DEFAULT_FALLBACK_VIDEOS.map((vid, vIdx) => (
+                            <button
+                              key={vid}
+                              onClick={() => setPresetVideo(reel.id, vid)}
+                              className="px-2 py-1 text-[10px] bg-white/5 hover:bg-white/15 rounded text-white/70"
+                            >
+                              Preset {vIdx + 1}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-
-                    {/* Instant Cookie Video Presets */}
-                    <div className="flex flex-wrap gap-1.5 pt-1 border-t border-[#6C1929]/10">
-                      <span className="text-[10px] text-[#6C1929]/70 w-full font-medium">Choose a preset video:</span>
-                      <button
-                        type="button"
-                        onClick={() => setPresetVideo(reel.id, "/videos/cookie_pull.mp4")}
-                        className="px-2 py-0.5 rounded bg-[#F5F0E5] hover:bg-[#EAE1CF] text-[#6C1929] text-[10px] font-semibold border border-[#6C1929]/15 cursor-pointer"
-                      >
-                        Cookie Pull
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPresetVideo(reel.id, "/videos/cookie_unboxing.mp4")}
-                        className="px-2 py-0.5 rounded bg-[#F5F0E5] hover:bg-[#EAE1CF] text-[#6C1929] text-[10px] font-semibold border border-[#6C1929]/15 cursor-pointer"
-                      >
-                        Nutella Tin
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPresetVideo(reel.id, "/videos/cookie_crumb.mp4")}
-                        className="px-2 py-0.5 rounded bg-[#F5F0E5] hover:bg-[#EAE1CF] text-[#6C1929] text-[10px] font-semibold border border-[#6C1929]/15 cursor-pointer"
-                      >
-                        NYC Crumb
-                      </button>
-                    </div>
-                  </div>
-                )}
-
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
-
       </div>
     </section>
   );

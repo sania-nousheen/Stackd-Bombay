@@ -1,34 +1,62 @@
+import { getAssetUrl } from "../utils/assets";
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, ArrowRight, Loader2 } from 'lucide-react';
 import { safeLocalStorageSet } from '../utils/mediaStorage';
-import React, { useState, useRef } from 'react';
-import { Camera, ArrowRight } from 'lucide-react';
+import { subscribeSiteMedia, saveSiteMedia, uploadMediaFile } from '../services/firebase';
 
 export const FounderSection: React.FC = () => {
-  // Allow user to upload/replace the real photo of Bhavya if desired
   const [customPhoto, setCustomPhoto] = useState<string | null>(() => {
-    return localStorage.getItem('stackd_founder_photo') || localStorage.getItem('stackd_bhavya_photo');
+    try {
+      return localStorage.getItem('stackd_founder_photo') || localStorage.getItem('stackd_bhavya_photo');
+    } catch {
+      return null;
+    }
   });
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // 1. Subscribe to real-time shared Firestore site_media
+    const unsubscribe = subscribeSiteMedia((mediaMap) => {
+      if (mediaMap.founder) {
+        setCustomPhoto(mediaMap.founder);
+        safeLocalStorageSet('stackd_founder_photo', mediaMap.founder);
+      }
+    });
+
+    // 2. Also listen for internal tab updates
     const handleUpdate = () => {
-      setCustomPhoto(localStorage.getItem('stackd_founder_photo') || localStorage.getItem('stackd_bhavya_photo'));
+      try {
+        const local = localStorage.getItem('stackd_founder_photo') || localStorage.getItem('stackd_bhavya_photo');
+        if (local) setCustomPhoto(local);
+      } catch {}
     };
     window.addEventListener('stackd_data_updated', handleUpdate);
-    return () => window.removeEventListener('stackd_data_updated', handleUpdate);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('stackd_data_updated', handleUpdate);
+    };
   }, []);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setCustomPhoto(result);
-        safeLocalStorageSet('stackd_founder_photo', result);
-        safeLocalStorageSet('stackd_bhavya_photo', result);
+      setIsUploading(true);
+      try {
+        // Upload to shared cloud storage or fallback data URL
+        const mediaUrl = await uploadMediaFile(file, 'photos');
+        setCustomPhoto(mediaUrl);
+        safeLocalStorageSet('stackd_founder_photo', mediaUrl);
+        safeLocalStorageSet('stackd_bhavya_photo', mediaUrl);
+        // Persist to shared Firestore accessible to every public visitor
+        await saveSiteMedia('founder', mediaUrl);
         window.dispatchEvent(new Event('stackd_data_updated'));
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.warn('Photo upload failed, using local preview:', err);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -46,12 +74,17 @@ export const FounderSection: React.FC = () => {
               {/* Scrapbook washi tape visual at top */}
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#E8DEC7]/80 rotate-[-1.5deg] border-x border-[#6C1929]/20 shadow-sm z-30 pointer-events-none" />
 
-              {/* Founder Frame with Double Border (Fixed aspect ratio, fits without zooming, card size never shifts) */}
+              {/* Founder Frame with Double Border */}
               <div className="relative rounded-2xl bg-[#EDE5D3] p-3 shadow-xl border border-[#6C1929]/15 overflow-hidden transition-transform duration-300 group-hover:rotate-[0.5deg]">
                 <div className="relative aspect-[4/5] w-full shrink-0 rounded-xl overflow-hidden bg-[#350A13] flex items-center justify-center text-center">
-                  {customPhoto ? (
+                  {isUploading ? (
+                    <div className="flex flex-col items-center justify-center text-[#F5F0E5] gap-3">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#F5F0E5]" />
+                      <span className="text-xs uppercase tracking-widest font-mono">Syncing photo...</span>
+                    </div>
+                  ) : customPhoto ? (
                     <img
-                      src={customPhoto}
+                      src={getAssetUrl(customPhoto)}
                       alt="Bhavya holding a Stackd cookie in her Stackd Bombay shirt"
                       className="w-full h-full object-cover object-center block"
                       referrerPolicy="no-referrer"
@@ -107,7 +140,7 @@ export const FounderSection: React.FC = () => {
                   />
                 </div>
 
-                {/* Bottom caption caption plate */}
+                {/* Bottom caption plate */}
                 <div className="pt-3 pb-1 px-2 flex items-center justify-between text-xs text-[#6C1929]">
                   <span className="font-editorial italic text-sm">Bhavya in the Worli kitchen</span>
                   <span className="text-[11px] uppercase tracking-wider text-[#6C1929]/70">Est. 2024</span>
@@ -136,12 +169,12 @@ export const FounderSection: React.FC = () => {
               <span>Worli, Mumbai</span>
             </div>
 
-            {/* Main Editorial Headline: All first letters capital, Brand beside Cookie, no forced line break */}
+            {/* Main Editorial Headline */}
             <h2 className="font-['Cormorant_Garamond',Georgia,serif] font-medium not-italic text-[27px] sm:text-[32px] lg:text-[38px] leading-[1.15] tracking-[-0.4px] text-[#6C1929] text-left mb-5">
               19 Year Old College Student And Building A Cookie Brand
             </h2>
 
-            {/* Emotional Story Narrative with equal left alignment */}
+            {/* Emotional Story Narrative */}
             <div className="space-y-4 text-sm sm:text-base text-[#44101B] leading-relaxed font-normal text-left">
               <p>
                 Bhavya didn’t wait for graduation to build something obsessive. Between early morning lectures, assignment submissions, group presentations, and exams, she spent months turning a Worli kitchen into a high-stakes test lab.
@@ -183,7 +216,6 @@ export const FounderSection: React.FC = () => {
                 <ArrowRight className="w-3.5 h-3.5" />
               </a>
             </div>
-
           </div>
         </div>
       </div>

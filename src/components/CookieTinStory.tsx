@@ -1,20 +1,32 @@
-import React from 'react';
+import { getAssetUrl } from "../utils/assets";
+import React, { useState, useEffect } from 'react';
 import { Package, ArrowRight } from 'lucide-react';
+import { subscribeSiteMedia } from '../services/firebase';
+import { safeLocalStorageSet } from '../utils/mediaStorage';
 
 interface CookieTinStoryProps {
   onOpenOrder: () => void;
 }
 
 export const CookieTinStory: React.FC<CookieTinStoryProps> = ({ onOpenOrder }) => {
-  const [tinPhoto, setTinPhoto] = React.useState<string>(() => {
+  const [tinPhoto, setTinPhoto] = useState<string>(() => {
     try {
-      return localStorage.getItem('stackd_tin_photo') || '/src/assets/images/cookie_nutella_tin_1791484044384.jpg';
+      return localStorage.getItem('stackd_tin_photo') || '/images/cookie_nutella_tin_1791484044384.jpg';
     } catch {
-      return '/src/assets/images/cookie_nutella_tin_1791484044384.jpg';
+      return '/images/cookie_nutella_tin_1791484044384.jpg';
     }
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // 1. Real-time subscription to shared Firestore site_media
+    const unsubscribe = subscribeSiteMedia((mediaMap) => {
+      if (mediaMap.tin) {
+        setTinPhoto(mediaMap.tin);
+        safeLocalStorageSet('stackd_tin_photo', mediaMap.tin);
+      }
+    });
+
+    // 2. Tab update listener
     const handleUpdate = () => {
       try {
         const saved = localStorage.getItem('stackd_tin_photo');
@@ -22,7 +34,11 @@ export const CookieTinStory: React.FC<CookieTinStoryProps> = ({ onOpenOrder }) =
       } catch {}
     };
     window.addEventListener('stackd_data_updated', handleUpdate);
-    return () => window.removeEventListener('stackd_data_updated', handleUpdate);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('stackd_data_updated', handleUpdate);
+    };
   }, []);
 
   return (
@@ -34,11 +50,11 @@ export const CookieTinStory: React.FC<CookieTinStoryProps> = ({ onOpenOrder }) =
       <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* LEFT: Cookie Tin Visual Presentation (Fixed aspect ratio, fits without zooming, card size never shifts) */}
+          {/* LEFT: Cookie Tin Visual Presentation */}
           <div className="lg:col-span-6 relative group">
             <div className="relative aspect-[4/3] w-full shrink-0 rounded-2xl overflow-hidden border border-[#F5F0E5]/20 shadow-2xl bg-[#1C0509]">
               <img
-                src={tinPhoto}
+                src={getAssetUrl(tinPhoto)}
                 alt="Stacked loaded cookies inside keepsake deep burgundy Stackd tin with melted Nutella"
                 className="w-full h-full object-cover object-center block"
                 referrerPolicy="no-referrer"
@@ -69,7 +85,7 @@ export const CookieTinStory: React.FC<CookieTinStoryProps> = ({ onOpenOrder }) =
               <span>Packaging Journey</span>
             </div>
 
-            {/* Heading in Cormorant Garamond Medium (500) */}
+            {/* Heading */}
             <h2 className="font-['Cormorant_Garamond',Georgia,serif] font-medium not-italic text-3xl sm:text-4xl lg:text-[44px] text-[#F5F0E5] leading-snug tracking-[-0.3px] mb-5 max-w-md">
               Sometimes Bigger Just Makes More Sense
             </h2>
@@ -108,7 +124,6 @@ export const CookieTinStory: React.FC<CookieTinStoryProps> = ({ onOpenOrder }) =
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
-
           </div>
         </div>
       </div>

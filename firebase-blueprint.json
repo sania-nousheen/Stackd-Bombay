@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "SiteMedia": {
+      "title": "SiteMedia",
+      "description": "Media assets and photos displayed across public Stackd Bombay website sections (About, Philosophy, Packaging)",
+      "type": "object",
+      "properties": {
+        "mediaId": {
+          "type": "string",
+          "description": "Unique key for the section media: founder, ingredients, or tin",
+          "maxLength": 64
+        },
+        "url": {
+          "type": "string",
+          "description": "Shared public media URL or data URL for the image asset",
+          "maxLength": 2097152
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp when the media was last updated"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Identifier of the admin who updated the media",
+          "maxLength": 128
+        }
+      },
+      "required": ["mediaId", "url"]
+    },
+    "ReelItem": {
+      "title": "ReelItem",
+      "description": "Customer review video reel item displayed in the vertical Reel Wall customer reviews section",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the video reel",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "description": "Title or display name for the reel",
+          "maxLength": 120
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "Reviewer name or creator handle",
+          "maxLength": 120
+        },
+        "quote": {
+          "type": "string",
+          "description": "Quote highlight from the customer review",
+          "maxLength": 500
+        },
+        "instagramUrl": {
+          "type": "string",
+          "description": "Link to original Instagram Reel or post",
+          "maxLength": 500
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "Shared public video URL or cloud storage URL",
+          "maxLength": 2097152
+        },
+        "poster": {
+          "type": "string",
+          "description": "Poster preview thumbnail image URL",
+          "maxLength": 2097152
+        },
+        "order": {
+          "type": "number",
+          "description": "Display order index in the carousel"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last update"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Identifier of the admin who updated the reel",
+          "maxLength": 128
+        }
+      },
+      "required": ["id", "name", "videoUrl"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized administrator record for Stackd Bombay brand portal",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the administrator",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "Role level (admin, founder)",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account registration timestamp"
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/site_media/{mediaId}": {
+      "schema": "SiteMedia",
+      "description": "Published media assets accessible to public website visitors across all devices"
+    },
+    "/reels/{reelId}": {
+      "schema": "ReelItem",
+      "description": "Published customer review video reels visible to public visitors"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Authorized administrator user accounts"
+    }
+  }
+}

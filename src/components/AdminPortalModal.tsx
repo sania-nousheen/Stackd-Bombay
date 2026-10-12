@@ -27,8 +27,25 @@ import {
   Instagram,
   Image as ImageIcon,
   Camera,
-  Upload
+  Upload,
+  Loader2,
+  Cloud,
+  CheckCircle2,
+  Globe
 } from 'lucide-react';
+import {
+  subscribeSiteMedia,
+  saveSiteMedia,
+  subscribeReels,
+  saveReel,
+  deleteReel as deleteFirestoreReel,
+  uploadMediaFile,
+  loginWithGoogle,
+  logoutAdmin,
+  subscribeAuth,
+  auth
+} from '../services/firebase';
+import { User } from 'firebase/auth';
 import { DEFAULT_REELS, ReelItem, extractInstagramShortcode, isInstagramUrl, sanitizeReelsForLocalStorage } from './ReelWallSection';
 import { idbGet, idbSet, idbDel, safeLocalStorageSet } from '../utils/mediaStorage';
 
@@ -86,9 +103,35 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     return DEFAULT_REELS;
   });
   const [selectedReelId, setSelectedReelId] = useState<string>(reels[0]?.id || '');
-  // Hydrate full reels (including custom high-res video data) from IndexedDB whenever modal opens
+  const [adminUser, setAdminUser] = useState<User | null>(auth.currentUser);
+  const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
+
+  useEffect(() => {
+    return subscribeAuth((u: User | null) => setAdminUser(u));
+  }, []);
+
+  // Hydrate shared media and reels from Firestore whenever modal opens
   useEffect(() => {
     if (!isOpen) return;
+
+    // 1. Subscribe to shared Firestore media
+    const unsubMedia = subscribeSiteMedia((map: Record<string, string>) => {
+      if (map.founder) setFounderPhoto(map.founder);
+      if (map.tin) setTinPhoto(map.tin);
+      if (map.ingredients) setIngredientsPhoto(map.ingredients);
+    });
+
+    // 2. Subscribe to shared Firestore reels
+    const unsubReels = subscribeReels((remote: any[]) => {
+      if (remote && remote.length > 0) {
+        setReels(remote.map((item: any, idx: number) => ({
+          ...DEFAULT_REELS[idx % DEFAULT_REELS.length],
+          ...item
+        })));
+      }
+    });
+
+    // 3. Fallback IndexedDB check for local video cache
     const loadFullReels = async () => {
       const stored = await idbGet<ReelItem[]>("stackd_reels_full");
       if (stored && Array.isArray(stored) && stored.length > 0) {
@@ -96,6 +139,11 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
       }
     };
     loadFullReels();
+
+    return () => {
+      unsubMedia();
+      unsubReels();
+    };
   }, [isOpen]);
 
 
@@ -152,14 +200,33 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
       setIsAuthenticated(true);
       setAuthError(null);
       setPassword('');
+      showNotification('Admin portal unlocked!');
     } else {
       setAuthError('Incorrect password. Please enter the valid admin password.');
     }
   };
 
-  const handleLogout = () => {
+  const handleGoogleLogin = async () => {
+    setIsSyncingCloud(true);
+    try {
+      const user = await loginWithGoogle();
+      setAdminUser(user);
+      sessionStorage.setItem('stackd_admin_auth', 'true');
+      setIsAuthenticated(true);
+      setAuthError(null);
+      showNotification(`Signed in as ${user.email}. Shared cloud sync active!`);
+    } catch (err: any) {
+      console.warn('Google sign in error:', err);
+      setAuthError(err?.message || 'Google sign-in failed');
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  const handleLogout = async () => {
     try {
       sessionStorage.removeItem('stackd_admin_auth');
+      await logoutAdmin();
     } catch {}
     setIsAuthenticated(false);
     setPassword('');
@@ -248,25 +315,57 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
     setSelectedReelId(newId);
   };
 
-  const handleDeleteReel = (id: string) => {
+  const handleDeleteReel = async (id: string) => {
     if (reels.length <= 1) return;
     const filtered = reels.filter((r) => r.id !== id);
     setReels(filtered);
     setSelectedReelId(filtered[0]?.id || '');
+    try {
+      await deleteFirestoreReel(id);
+    } catch (err) {
+      console.warn('Firestore reel delete:', err);
+    }
+  };
+
+  const handleUploadReelVideo = async (file: File) => {
+    if (!currentReel) return;
+    setIsSyncingCloud(true);
+    try {
+      const uploadedUrl = await uploadMediaFile(file, 'videos');
+      handleUpdateReel('videoUrl', uploadedUrl);
+      showNotification('Video uploaded to shared cloud storage!');
+    } catch (err) {
+      console.warn('Video upload error:', err);
+      showNotification('Could not upload video.');
+    } finally {
+      setIsSyncingCloud(false);
+    }
   };
 
   const handleSaveReels = async () => {
+    setIsSyncingCloud(true);
     try {
-      // 1. Store full high-definition video/media data in IndexedDB (no 5MB quota limitation)
+      // 1. Store full high-definition video/media data in IndexedDB
       await idbSet('stackd_reels_full', reels);
-      // 2. Store lightweight metadata into localStorage without heavy base64 blobs
+      // 2. Store lightweight metadata into localStorage
       const sanitized = sanitizeReelsForLocalStorage(reels);
       safeLocalStorageSet('stackd_reels_data', JSON.stringify(sanitized));
+
+      // 3. Persist each reel to shared Firestore
+      for (let i = 0; i < reels.length; i++) {
+        await saveReel({
+          ...reels[i],
+          order: i
+        });
+      }
+
       window.dispatchEvent(new Event('stackd_data_updated'));
-      showNotification('Reviews & reels saved successfully!');
+      showNotification('Customer review videos saved and published to public site!');
     } catch (err) {
       console.error('Error saving reels:', err);
-      showNotification('Error saving reels. Please try again.');
+      showNotification('Reels saved locally.');
+    } finally {
+      setIsSyncingCloud(false);
     }
   };
 
@@ -335,21 +434,57 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
   };
 
   // ===================== PHOTOS ACTIONS =====================
-  const handleSavePhotos = () => {
+  const handleUploadPhotoFile = async (type: 'founder' | 'tin' | 'ingredients', file: File) => {
+    setIsSyncingCloud(true);
+    try {
+      const downloadUrl = await uploadMediaFile(file, 'photos');
+      if (type === 'founder') {
+        setFounderPhoto(downloadUrl);
+        safeLocalStorageSet('stackd_founder_photo', downloadUrl);
+        safeLocalStorageSet('stackd_bhavya_photo', downloadUrl);
+        await saveSiteMedia('founder', downloadUrl);
+      } else if (type === 'tin') {
+        setTinPhoto(downloadUrl);
+        safeLocalStorageSet('stackd_tin_photo', downloadUrl);
+        await saveSiteMedia('tin', downloadUrl);
+      } else if (type === 'ingredients') {
+        setIngredientsPhoto(downloadUrl);
+        safeLocalStorageSet('stackd_ingredients_photo', downloadUrl);
+        await saveSiteMedia('ingredients', downloadUrl);
+      }
+      window.dispatchEvent(new Event('stackd_data_updated'));
+      showNotification(`${type} photo uploaded and published to public site!`);
+    } catch (err) {
+      console.warn('Photo upload error:', err);
+      showNotification('Could not upload photo.');
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  const handleSavePhotos = async () => {
+    setIsSyncingCloud(true);
     try {
       if (founderPhoto) {
         safeLocalStorageSet('stackd_founder_photo', founderPhoto);
         safeLocalStorageSet('stackd_bhavya_photo', founderPhoto);
+        await saveSiteMedia('founder', founderPhoto);
       }
       if (tinPhoto) {
         safeLocalStorageSet('stackd_tin_photo', tinPhoto);
+        await saveSiteMedia('tin', tinPhoto);
       }
       if (ingredientsPhoto) {
         safeLocalStorageSet('stackd_ingredients_photo', ingredientsPhoto);
+        await saveSiteMedia('ingredients', ingredientsPhoto);
       }
-      showNotification('Website photos saved and updated successfully!');
-    } catch {
-      showNotification('Photos saved!');
+      window.dispatchEvent(new Event('stackd_data_updated'));
+      showNotification('Website photos saved and published to all visitors!');
+    } catch (err) {
+      console.warn('Error saving photos:', err);
+      showNotification('Photos saved locally. Connect Google Admin to sync.');
+    } finally {
+      setIsSyncingCloud(false);
     }
   };
 
@@ -464,6 +599,31 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
+
+          {/* Google Sign-in for persistent cloud sync */}
+          <div className="mt-4 pt-4 border-t border-[#6C1929]/15">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isSyncingCloud}
+              className="w-full py-3 px-4 rounded-xl bg-white border border-[#6C1929]/25 hover:bg-[#6C1929]/5 text-[#6C1929] text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+            >
+              {isSyncingCloud ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#6C1929]" />
+              ) : (
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+              )}
+              <span>Sign in with Google (Founder Cloud Sync)</span>
+            </button>
+            <p className="text-[10px] text-center text-[#6C1929]/70 mt-1.5 font-sans-clean">
+              Enables real-time public publishing to all external devices & GitHub Pages
+            </p>
+          </div>
 
           {/* Footer note */}
           <div className="mt-6 pt-4 border-t border-[#6C1929]/10 text-center">
@@ -1045,14 +1205,7 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                const dataUrl = ev.target?.result as string;
-                                if (dataUrl) {
-                                  handleUpdateReel("videoUrl", dataUrl);
-                                }
-                              };
-                              reader.readAsDataURL(file);
+                              handleUploadReelVideo(file);
                             }
                           }}
                         />
@@ -1341,14 +1494,29 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
           {/* TAB 4: WEBSITE PHOTOS & MEDIA */}
           {activeTab === 'photos' && (
             <div className="h-full overflow-y-auto p-6 sm:p-8 bg-[#FAF7F0] space-y-8">
-              <div className="flex items-center justify-between pb-4 border-b border-[#6C1929]/15">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#6C1929]/15 gap-4">
                 <div>
                   <h3 className="font-['Cormorant_Garamond',Georgia,serif] text-2xl font-medium text-[#6C1929]">
                     Website Photography & Media Manager
                   </h3>
                   <p className="text-xs text-[#6C1929]/70 font-sans-clean mt-0.5">
-                    Upload or replace photography across website sections. All preview frames have locked dimensions so cards never shift and pictures fit cleanly without zooming distortion.
+                    Upload or replace photography across website sections. Changes automatically publish to all devices and visitors in shared cloud storage.
                   </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleSavePhotos}
+                    disabled={isSyncingCloud}
+                    className="px-4 py-2.5 bg-[#6C1929] hover:bg-[#52111E] text-[#F5F0E5] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    {isSyncingCloud ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Cloud className="w-4 h-4" />
+                    )}
+                    <span>Publish Photos to Live Site</span>
+                  </button>
                 </div>
               </div>
 
@@ -1406,11 +1574,7 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setFounderPhoto(ev.target?.result as string);
-                                  };
-                                  reader.readAsDataURL(file);
+                                  handleUploadPhotoFile('founder', file);
                                 }
                               }}
                             />
@@ -1480,11 +1644,7 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setTinPhoto(ev.target?.result as string);
-                                  };
-                                  reader.readAsDataURL(file);
+                                  handleUploadPhotoFile('tin', file);
                                 }
                               }}
                             />
@@ -1551,11 +1711,7 @@ className="px-3 py-2 border border-[#6C1929]/20 hover:bg-[#6C1929]/5 text-[#6C19
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setIngredientsPhoto(ev.target?.result as string);
-                                  };
-                                  reader.readAsDataURL(file);
+                                  handleUploadPhotoFile('ingredients', file);
                                 }
                               }}
                             />

@@ -1,3 +1,4 @@
+import { getAssetUrl } from "../utils/assets";
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { StackdLogo } from './StackdLogo';
@@ -25,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenOrder }) => {
           className="w-full h-full object-cover object-center filter brightness-[0.82] contrast-[1.08] transform scale-105"
         >
           {/* Mr Crumble style high-definition slow-motion cookie background video */}
-          <source src="/hero_cookie.mp4" type="video/mp4" />
+          <source src={getAssetUrl("hero_cookie.mp4")} type="video/mp4" />
           <source src="https://assets.mixkit.co/videos/12400/12400-720.mp4" type="video/mp4" />
         </video>
 

@@ -1,3 +1,4 @@
+import { getAssetUrl } from "../utils/assets";
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowDownRight } from 'lucide-react';
@@ -39,7 +40,7 @@ export const TransparentCookieStory: React.FC = () => {
           className="absolute -top-16 -left-20 w-80 sm:w-[450px] aspect-square rounded-full overflow-hidden opacity-25 mix-blend-multiply filter blur-[1px]"
         >
           <img
-            src="/src/assets/images/cookie_holy_trinity_1791484027979.jpg"
+            src={getAssetUrl("/images/cookie_holy_trinity_1791484027979.jpg")}
             alt="Artisanal cookie drifting in background"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -55,7 +56,7 @@ export const TransparentCookieStory: React.FC = () => {
           className="absolute -bottom-24 -right-16 w-96 sm:w-[520px] aspect-square rounded-full overflow-hidden opacity-20 mix-blend-multiply filter blur-[0.5px]"
         >
           <img
-            src="/src/assets/images/hero_cookie_macro_1791484018264.jpg"
+            src={getAssetUrl("/images/hero_cookie_macro_1791484018264.jpg")}
             alt="Artisanal cookie drifting in background"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -71,7 +72,7 @@ export const TransparentCookieStory: React.FC = () => {
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-[380px] aspect-square rounded-full overflow-hidden opacity-10 mix-blend-multiply"
         >
           <img
-            src="/src/assets/images/cookie_nutella_tin_1791484044384.jpg"
+            src={getAssetUrl("/images/cookie_nutella_tin_1791484044384.jpg")}
             alt="Cookie tin drifting in background"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"

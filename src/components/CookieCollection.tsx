@@ -1,3 +1,4 @@
+import { getAssetUrl } from "../utils/assets";
 import React, { useState } from 'react';
 import { PRODUCTS, Product } from '../data/products';
 import { ShoppingBag, X } from 'lucide-react';
@@ -75,7 +76,7 @@ export const CookieCollection: React.FC<CookieCollectionProps> = ({
                 <div className="absolute inset-4 rounded-full bg-black/80 blur-xl transform translate-y-6 scale-90" />
                 
                 <img
-                  src={product.image}
+                  src={getAssetUrl(product.image)}
                   alt={product.name}
                   className="relative w-full h-full object-cover rounded-full shadow-2xl transition-transform duration-500 group-hover:rotate-3"
                   referrerPolicy="no-referrer"
@@ -130,7 +131,7 @@ export const CookieCollection: React.FC<CookieCollectionProps> = ({
 
             <div className="w-36 h-36 mx-auto mb-4 rounded-full overflow-hidden shadow-xl border border-white/15">
               <img
-                src={selectedTastingProduct.image}
+                src={getAssetUrl(selectedTastingProduct.image)}
                 alt={selectedTastingProduct.name}
                 className="w-full h-full object-cover"
               />

@@ -1,3 +1,4 @@
+import { getAssetUrl } from "../utils/assets";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { StackdLogo } from './StackdLogo';
@@ -103,7 +104,7 @@ export const IntroCinematic: React.FC<IntroCinematicProps> = ({ onComplete, forc
           >
             {/* Real chunky chocolate cookie imagery */}
             <img
-              src="/src/assets/images/hero_cookie_macro_1791484018264.jpg"
+              src={getAssetUrl("/images/hero_cookie_macro_1791484018264.jpg")}
               alt=""
               className="w-full h-full object-cover filter brightness-[0.72] contrast-[1.25] mix-blend-soft-light"
             />
@@ -166,7 +167,7 @@ export const IntroCinematic: React.FC<IntroCinematicProps> = ({ onComplete, forc
           >
             {/* Real chunky chocolate cookie imagery */}
             <img
-              src="/src/assets/images/hero_cookie_macro_1791484018264.jpg"
+              src={getAssetUrl("/images/hero_cookie_macro_1791484018264.jpg")}
               alt=""
               className="w-full h-full object-cover filter brightness-[0.72] contrast-[1.25] mix-blend-soft-light"
             />

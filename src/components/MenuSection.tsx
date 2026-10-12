@@ -1,3 +1,4 @@
+import { getAssetUrl } from "../utils/assets";
 import { safeLocalStorageSet } from '../utils/mediaStorage';
 import React, { useState } from 'react';
 import { PRODUCTS, Product } from '../data/products';
@@ -151,7 +152,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
                 {/* Large Product Imagery & Photo Replacement Slot */}
                 <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#2D0B12] mb-6 shadow-md group/img">
                   <img
-                    src={displayImage}
+                    src={getAssetUrl(displayImage)}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     referrerPolicy="no-referrer"

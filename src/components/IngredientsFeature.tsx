@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import { getAssetUrl } from "../utils/assets";
+import React, { useState, useEffect } from 'react';
+import { subscribeSiteMedia } from '../services/firebase';
+import { safeLocalStorageSet } from '../utils/mediaStorage';
 
 export const IngredientsFeature: React.FC = () => {
   const [activeIngredient, setActiveIngredient] = useState<number>(0);
   const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
     try {
-      return localStorage.getItem('stackd_ingredients_photo') || '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg';
+      return localStorage.getItem('stackd_ingredients_photo') || '/images/ingredients_couverture_butter_1791484056180.jpg';
     } catch {
-      return '/src/assets/images/ingredients_couverture_butter_1791484056180.jpg';
+      return '/images/ingredients_couverture_butter_1791484056180.jpg';
     }
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // 1. Real-time subscription to shared Firestore site_media
+    const unsubscribe = subscribeSiteMedia((mediaMap) => {
+      if (mediaMap.ingredients) {
+        setIngredientsPhoto(mediaMap.ingredients);
+        safeLocalStorageSet('stackd_ingredients_photo', mediaMap.ingredients);
+      }
+    });
+
+    // 2. Tab event update
     const handleUpdate = () => {
       try {
         const saved = localStorage.getItem('stackd_ingredients_photo');
@@ -18,7 +30,11 @@ export const IngredientsFeature: React.FC = () => {
       } catch {}
     };
     window.addEventListener('stackd_data_updated', handleUpdate);
-    return () => window.removeEventListener('stackd_data_updated', handleUpdate);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('stackd_data_updated', handleUpdate);
+    };
   }, []);
 
   const ingredients = [
@@ -72,11 +88,11 @@ export const IngredientsFeature: React.FC = () => {
         {/* Cinematic Grid: Visual Showcase + Technical Breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* LEFT: Real Ingredient Editorial Photography (Fixed aspect ratio, fits without zooming, card size never shifts) */}
+          {/* LEFT: Real Ingredient Editorial Photography */}
           <div className="lg:col-span-7 relative group">
             <div className="relative aspect-[16/10] w-full shrink-0 rounded-2xl overflow-hidden border border-[#F5F0E5]/20 shadow-2xl bg-[#170508]">
               <img
-                src={ingredientsPhoto}
+                src={getAssetUrl(ingredientsPhoto)}
                 alt="Belgian couverture chocolate callets and wrapped French butter in an artisanal bakery setting"
                 className="w-full h-full object-cover object-center block"
                 referrerPolicy="no-referrer"
@@ -125,15 +141,12 @@ export const IngredientsFeature: React.FC = () => {
                       0{idx + 1}
                     </span>
                   </div>
-
                   <h3 className="font-editorial text-xl sm:text-2xl text-[#F5F0E5] mb-2 font-medium">
                     {item.title}
                   </h3>
-
                   <p className="font-sans-clean text-xs sm:text-sm text-[#F5F0E5]/80 leading-relaxed font-light mb-3">
                     {item.detail}
                   </p>
-
                   {isSelected && (
                     <div className="pt-2 border-t border-[#F5F0E5]/10">
                       <p className="font-editorial italic text-xs sm:text-sm text-[#E3D6C2]">
@@ -145,9 +158,7 @@ export const IngredientsFeature: React.FC = () => {
               );
             })}
           </div>
-
         </div>
-
       </div>
     </section>
   );

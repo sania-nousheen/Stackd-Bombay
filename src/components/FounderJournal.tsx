@@ -1,3 +1,4 @@
+import { getAssetUrl } from "../utils/assets";
 import React, { useState } from 'react';
 import { JOURNAL_POSTS, JournalPost } from '../data/journal';
 import { JournalAdminModal } from './JournalAdminModal';
@@ -116,7 +117,7 @@ export const FounderJournal: React.FC<FounderJournalProps> = ({
                 {/* Card Image with Hover Zoom Animation */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-[#24080F]">
                   <img
-                    src={post.image}
+                    src={getAssetUrl(post.image)}
                     alt={post.title}
                     className="w-full h-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
                     referrerPolicy="no-referrer"
@@ -211,7 +212,7 @@ export const FounderJournal: React.FC<FounderJournalProps> = ({
               {/* Image banner inside reader */}
               <div className="aspect-[16/9] rounded-xl overflow-hidden mb-6 border border-[#6C1929]/15">
                 <img
-                  src={selectedPost.image}
+                  src={getAssetUrl(selectedPost.image)}
                   alt={selectedPost.title}
                   className="w-full h-full object-cover"
                 />
