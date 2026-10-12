@@ -83,12 +83,23 @@ export const FounderSection: React.FC = () => {
                       <span className="text-xs uppercase tracking-widest font-mono">Syncing photo...</span>
                     </div>
                   ) : customPhoto ? (
-                    <img
-                      src={getAssetUrl(customPhoto)}
-                      alt="Bhavya holding a Stackd cookie in her Stackd Bombay shirt"
-                      className="w-full h-full object-cover object-center block"
-                      referrerPolicy="no-referrer"
-                    />
+                    <div className="relative w-full h-full group/photo">
+                      <img
+                        src={getAssetUrl(customPhoto)}
+                        alt="Bhavya holding a Stackd cookie in her Stackd Bombay shirt"
+                        className="w-full h-full object-cover object-center block"
+                        referrerPolicy="no-referrer"
+                      />
+                      {/* Subtle admin change button on hover */}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-[#F5F0E5] opacity-0 group-hover/photo:opacity-100 transition-opacity cursor-pointer shadow-md"
+                        title="Update portrait photo"
+                        aria-label="Update portrait photo"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   ) : (
                     /* Default Editorial Founder Display Card honoring Bhavya */
                     <div className="w-full h-full relative flex flex-col justify-between p-6 bg-gradient-to-b from-[#4A0E1B] to-[#2B0710] text-[#F5F0E5]">
@@ -121,7 +132,7 @@ export const FounderSection: React.FC = () => {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F5F0E5]/15 hover:bg-[#F5F0E5]/25 text-[#F5F0E5] text-[11px] font-medium transition-colors cursor-pointer"
                         >
                           <Camera className="w-3.5 h-3.5" />
-                          <span>Tap to load photo</span>
+                          <span>Upload Founder Photo</span>
                         </button>
                         <span className="font-signature text-2xl text-[#F5F0E5]/80">
                           bhavya.

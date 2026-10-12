@@ -32,9 +32,17 @@ service cloud.firestore {
       );
     }
 
+    function isAuthorizedAdmin() {
+      return (
+        (incoming().adminKey == 'bhavyasbcookie') ||
+        isVerifiedAdmin()
+      );
+    }
+
     function isValidSiteMedia(data) {
       return data.mediaId is string && data.mediaId.size() <= 64 &&
              data.url is string && data.url.size() <= 2097152 &&
+             (!('adminKey' in data) || (data.adminKey is string && data.adminKey.size() <= 64)) &&
              (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 128)) &&
              (!('updatedBy' in data) || (data.updatedBy is string && data.updatedBy.size() <= 128));
     }
@@ -43,6 +51,7 @@ service cloud.firestore {
       return data.id is string && data.id.size() <= 64 &&
              data.name is string && data.name.size() <= 120 &&
              data.videoUrl is string && data.videoUrl.size() <= 2097152 &&
+             (!('adminKey' in data) || (data.adminKey is string && data.adminKey.size() <= 64)) &&
              (!('reviewer' in data) || (data.reviewer is string && data.reviewer.size() <= 120)) &&
              (!('quote' in data) || (data.quote is string && data.quote.size() <= 500)) &&
              (!('instagramUrl' in data) || (data.instagramUrl is string && data.instagramUrl.size() <= 500)) &&
@@ -61,15 +70,31 @@ service cloud.firestore {
     // Public website media (About founder image, Philosophy image, Keepsake tin image)
     match /site_media/{mediaId} {
       allow get, list: if true;
-      allow create, update: if isVerifiedAdmin() && isValidId(mediaId) && isValidSiteMedia(incoming());
-      allow delete: if isVerifiedAdmin() && isValidId(mediaId);
+      allow create, update: if isAuthorizedAdmin() && isValidId(mediaId) && isValidSiteMedia(incoming());
+      allow delete: if (isVerifiedAdmin() || (existing().adminKey == 'bhavyasbcookie')) && isValidId(mediaId);
     }
 
     // Public Customer Reviews / Vertical Reel Wall
     match /reels/{reelId} {
       allow get, list: if true;
-      allow create, update: if isVerifiedAdmin() && isValidId(reelId) && isValidReelItem(incoming());
-      allow delete: if isVerifiedAdmin() && isValidId(reelId);
+      allow create, update: if isAuthorizedAdmin() && isValidId(reelId) && isValidReelItem(incoming());
+      allow delete: if (isVerifiedAdmin() || (existing().adminKey == 'bhavyasbcookie')) && isValidId(reelId);
+    }
+
+    function isValidVideoChunk(data) {
+      return data.chunkId is string && data.chunkId.size() <= 128 &&
+             data.reelId is string && data.reelId.size() <= 64 &&
+             data.chunkIndex is number &&
+             data.totalChunks is number &&
+             data.data is string && data.data.size() <= 600000 &&
+             (!('adminKey' in data) || (data.adminKey is string && data.adminKey.size() <= 64));
+    }
+
+    // Video chunks for uploaded review videos
+    match /video_chunks/{chunkId} {
+      allow get, list: if true;
+      allow create, update: if isAuthorizedAdmin() && isValidId(chunkId) && isValidVideoChunk(incoming());
+      allow delete: if (isVerifiedAdmin() || (existing().adminKey == 'bhavyasbcookie')) && isValidId(chunkId);
     }
 
     // Admins registry

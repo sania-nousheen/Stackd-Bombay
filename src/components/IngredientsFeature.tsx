@@ -2,14 +2,15 @@ import { getAssetUrl } from "../utils/assets";
 import React, { useState, useEffect } from 'react';
 import { subscribeSiteMedia } from '../services/firebase';
 import { safeLocalStorageSet } from '../utils/mediaStorage';
+import ingredientsImage from '../assets/images/ingredients_couverture_butter_1791484056180.jpg';
 
 export const IngredientsFeature: React.FC = () => {
   const [activeIngredient, setActiveIngredient] = useState<number>(0);
   const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
     try {
-      return localStorage.getItem('stackd_ingredients_photo') || '/images/ingredients_couverture_butter_1791484056180.jpg';
+      return localStorage.getItem('stackd_ingredients_photo') || ingredientsImage;
     } catch {
-      return '/images/ingredients_couverture_butter_1791484056180.jpg';
+      return ingredientsImage;
     }
   });
 

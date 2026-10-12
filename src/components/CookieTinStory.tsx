@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, ArrowRight } from 'lucide-react';
 import { subscribeSiteMedia } from '../services/firebase';
 import { safeLocalStorageSet } from '../utils/mediaStorage';
+import nutellaTinImage from '../assets/images/cookie_nutella_tin_1791484044384.jpg';
 
 interface CookieTinStoryProps {
   onOpenOrder: () => void;
@@ -11,9 +12,9 @@ interface CookieTinStoryProps {
 export const CookieTinStory: React.FC<CookieTinStoryProps> = ({ onOpenOrder }) => {
   const [tinPhoto, setTinPhoto] = useState<string>(() => {
     try {
-      return localStorage.getItem('stackd_tin_photo') || '/images/cookie_nutella_tin_1791484044384.jpg';
+      return localStorage.getItem('stackd_tin_photo') || nutellaTinImage;
     } catch {
-      return '/images/cookie_nutella_tin_1791484044384.jpg';
+      return nutellaTinImage;
     }
   });
 

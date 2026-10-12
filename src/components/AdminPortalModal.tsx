@@ -331,7 +331,7 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
     if (!currentReel) return;
     setIsSyncingCloud(true);
     try {
-      const uploadedUrl = await uploadMediaFile(file, 'videos');
+      const uploadedUrl = await uploadMediaFile(file, 'videos', currentReel.id);
       handleUpdateReel('videoUrl', uploadedUrl);
       showNotification('Video uploaded to shared cloud storage!');
     } catch (err) {
@@ -374,6 +374,12 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
       try {
         localStorage.removeItem('stackd_reels_data');
         await idbDel('stackd_reels_full');
+        for (let i = 0; i < DEFAULT_REELS.length; i++) {
+          await saveReel({
+            ...DEFAULT_REELS[i],
+            order: i
+          });
+        }
       } catch {}
       setReels(DEFAULT_REELS);
       setSelectedReelId('reel-1');
@@ -488,18 +494,27 @@ const [ingredientsPhoto, setIngredientsPhoto] = useState<string>(() => {
     }
   };
 
-  const handleResetPhotos = () => {
-  if (window.confirm('Reset all website photos back to original defaults?')) {
-    localStorage.removeItem('stackd_founder_photo');
-    localStorage.removeItem('stackd_bhavya_photo');
-    localStorage.removeItem('stackd_tin_photo');
-    localStorage.removeItem('stackd_ingredients_photo');
+  const handleResetPhotos = async () => {
+    if (window.confirm('Reset all website photos back to original defaults?')) {
+      localStorage.removeItem('stackd_founder_photo');
+      localStorage.removeItem('stackd_bhavya_photo');
+      localStorage.removeItem('stackd_tin_photo');
+      localStorage.removeItem('stackd_ingredients_photo');
 
-    setFounderPhoto('');
-    setTinPhoto(nutellaTinImage);
-    setIngredientsPhoto(ingredientsImage);
+      setFounderPhoto('');
+      setTinPhoto(nutellaTinImage);
+      setIngredientsPhoto(ingredientsImage);
 
-    showNotification('Photos reset to brand defaults!');
+      try {
+        await saveSiteMedia('founder', '');
+        await saveSiteMedia('tin', nutellaTinImage);
+        await saveSiteMedia('ingredients', ingredientsImage);
+      } catch (err) {
+        console.warn('Error resetting cloud photos:', err);
+      }
+
+      window.dispatchEvent(new Event('stackd_data_updated'));
+      showNotification('Photos reset to brand defaults!');
     }
   };
 

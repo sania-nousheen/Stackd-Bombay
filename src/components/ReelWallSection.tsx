@@ -2,7 +2,17 @@ import { getAssetUrl } from "../utils/assets";
 import React, { useState, useEffect, useRef } from "react";
 import { Link2, Volume2, VolumeX, Sparkles, Upload, Loader2 } from "lucide-react";
 import { idbGet, idbSet, safeLocalStorageSet } from "../utils/mediaStorage";
-import { subscribeReels, saveReel, uploadMediaFile, ReelRecord } from "../services/firebase";
+import {
+  subscribeReels,
+  saveReel,
+  uploadMediaFile,
+  fetchChunkedVideo,
+  ReelRecord
+} from "../services/firebase";
+
+import holyTrinityImage from '../assets/images/cookie_holy_trinity_1791484027979.jpg';
+import nutellaTinImage from '../assets/images/cookie_nutella_tin_1791484044384.jpg';
+import heroCookieImage from '../assets/images/hero_cookie_macro_1791484018264.jpg';
 
 export interface ReelItem {
   id: string;
@@ -40,7 +50,7 @@ export const DEFAULT_REELS: ReelItem[] = [
     quote: "“The molten Belgian chocolate core is completely insane. 10/10 gooeyness.”",
     instagramUrl: "https://instagram.com/reel/C2g7Z-yP3Z0",
     videoUrl: "/videos/cookie_pull.mp4",
-    poster: "/images/cookie_holy_trinity_1791484027979.jpg"
+    poster: holyTrinityImage
   },
   {
     id: "reel-2",
@@ -49,7 +59,7 @@ export const DEFAULT_REELS: ReelItem[] = [
     quote: "“Heaviest cookie tin in town. Warm it up for 20 seconds and thank me later.”",
     instagramUrl: "https://instagram.com/reel/C4h9xL1P0aB",
     videoUrl: "/videos/cookie_unboxing.mp4",
-    poster: "/images/cookie_nutella_tin_1791484044384.jpg"
+    poster: nutellaTinImage
   },
   {
     id: "reel-3",
@@ -58,7 +68,7 @@ export const DEFAULT_REELS: ReelItem[] = [
     quote: "“Pure French butter aroma. Crisp outer edge with that deep chewy centre.”",
     instagramUrl: "https://instagram.com/reel/C1m9kLkP4qR",
     videoUrl: "/videos/cookie_crumb.mp4",
-    poster: "/images/hero_cookie_macro_1791484018264.jpg"
+    poster: heroCookieImage
   }
 ];
 
@@ -79,10 +89,10 @@ export const isDirectPlayableVideo = (url?: string): boolean => {
 };
 
 export const resolvePlayableVideo = (url?: string, index: number = 0): string => {
-  if (url && isDirectPlayableVideo(url)) {
+  if (url && (isDirectPlayableVideo(url) || url.startsWith("blob:"))) {
     return url;
   }
-  return getAssetUrl(DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length]);
+  return DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length];
 };
 
 export function sanitizeReelsForLocalStorage(reels: ReelItem[]): ReelItem[] {
@@ -117,6 +127,7 @@ export const ReelWallSection: React.FC = () => {
     return DEFAULT_REELS;
   });
 
+  const [resolvedVideoUrls, setResolvedVideoUrls] = useState<Record<string, string>>({});
   const [isMuted, setIsMuted] = useState(true);
   const [editingReelId, setEditingReelId] = useState<string | null>(null);
   const [inputUrl, setInputUrl] = useState("");
@@ -184,6 +195,26 @@ export const ReelWallSection: React.FC = () => {
     };
   }, []);
 
+  // Resolve any chunked Firestore videos
+  useEffect(() => {
+    let isMounted = true;
+    reels.forEach(async (reel) => {
+      if (reel.videoUrl?.startsWith("firestore-chunk:")) {
+        const reelId = reel.videoUrl.replace("firestore-chunk:", "");
+        const blobUrl = await fetchChunkedVideo(reelId);
+        if (blobUrl && isMounted) {
+          setResolvedVideoUrls((prev) => ({
+            ...prev,
+            [reel.id]: blobUrl
+          }));
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [reels]);
+
   // Guarantee all videos start playing automatically on mount and whenever reels change
   useEffect(() => {
     const playAll = () => {
@@ -198,7 +229,7 @@ export const ReelWallSection: React.FC = () => {
       });
     };
     playAll();
-  }, [reels, isMuted]);
+  }, [reels, resolvedVideoUrls, isMuted]);
 
   // IntersectionObserver to guarantee videos play automatically as soon as section scrolls into view
   useEffect(() => {
@@ -290,8 +321,8 @@ export const ReelWallSection: React.FC = () => {
   const handleFileUpload = async (id: string, file: File) => {
     setIsUploading(true);
     try {
-      // Upload to shared cloud storage
-      const uploadedUrl = await uploadMediaFile(file, 'videos');
+      // Upload to shared cloud storage or Firestore chunks
+      const uploadedUrl = await uploadMediaFile(file, 'videos', id);
       const updated = reels.map((r) => {
         if (r.id === id) {
           return {
@@ -338,7 +369,8 @@ export const ReelWallSection: React.FC = () => {
         {/* 3 Reel Cards Grid - Pure Edge-to-Edge Autoplaying Looping Videos */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {reels.map((reel, index) => {
-            const playableUrl = resolvePlayableVideo(reel.videoUrl, index);
+            const resolvedUrl = resolvedVideoUrls[reel.id] || reel.videoUrl;
+            const playableUrl = resolvePlayableVideo(resolvedUrl, index);
 
             return (
               <div
@@ -354,7 +386,7 @@ export const ReelWallSection: React.FC = () => {
                       videoRefs.current[index] = el;
                     }}
                     src={getAssetUrl(playableUrl)}
-                    poster={reel.poster}
+                    poster={getAssetUrl(reel.poster)}
                     autoPlay
                     loop
                     muted={isMuted}
@@ -363,7 +395,7 @@ export const ReelWallSection: React.FC = () => {
                     className="w-full h-full object-cover object-center"
                     onError={(e) => {
                       const fallback = getAssetUrl(DEFAULT_FALLBACK_VIDEOS[index % DEFAULT_FALLBACK_VIDEOS.length]);
-                      if (e.currentTarget.src !== window.location.origin + fallback) {
+                      if (!e.currentTarget.src.endsWith(fallback.replace(/^\.\//, ''))) {
                         e.currentTarget.src = fallback;
                       }
                     }}
